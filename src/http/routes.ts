@@ -24,6 +24,8 @@ import { buildScorecard, getPilot, rollWeek, startPilot } from '../modules/pilot
 import { processRecord } from '../modules/pipeline/process-record';
 import { ingestSource } from '../modules/sources/ingest';
 import { authenticate, getUser } from './auth-hook';
+import { demoPage } from './demo-page';
+import { getDemoStory, sendDemoApproach } from '../modules/demo/view';
 
 const loginBody = z.object({ email: z.string().email(), password: z.string().min(1) });
 const settingsBody = z.object({
@@ -44,6 +46,22 @@ const settingsBody = z.object({
 });
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
+  app.get('/', async (_req, reply) => {
+    reply.type('text/html; charset=utf-8').send(demoPage);
+  });
+  app.get('/demo/story', async (_req, reply) => {
+    const story = await getDemoStory(app.db);
+    if (!story) return reply.code(404).send({ ready: false });
+    return story;
+  });
+  app.post('/demo/send', async (req, reply) => {
+    const body = (req.body ?? {}) as { approachId?: string };
+    if (!body.approachId) return reply.code(400).send({ error: 'approachId required' });
+    const result = await sendDemoApproach(app.db, body.approachId);
+    if (!result) return reply.code(404).send({ error: 'not found' });
+    return result;
+  });
+
   app.get('/health', async () => ({ ok: true }));
   app.get('/v1/health', async () => ({ ok: true, service: 'norfront' }));
   app.get('/v1/ready', async () => {
