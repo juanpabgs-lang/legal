@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: norfront
+      POSTGRES_PASSWORD: norfront
+      POSTGRES_DB: norfront
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    command: ["postgres", "-c", "shared_preload_libraries="]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U norfront']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    command: ['node', 'dist/server.js']
+    environment:
+      DATABASE_URL: postgres://norfront:norfront@postgres:5432/norfront
+      JWT_SECRET: norfront-dev-jwt-secret-change-me
+      MAIL_PROVIDER: test
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: ['node', 'dist/worker.js']
+    environment:
+      DATABASE_URL: postgres://norfront:norfront@postgres:5432/norfront
+      JWT_SECRET: norfront-dev-jwt-secret-change-me
+      MAIL_PROVIDER: test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
