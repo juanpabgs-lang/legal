@@ -43,7 +43,7 @@ export async function ingestSource(db: Database, sourceId: string, lookbackDays?
         .returning();
       if (row) {
         inserted += 1;
-        if (cfg.NODE_ENV !== 'test') {
+        if (cfg.NODE_ENV !== 'test' && !cfg.SKIP_ENQUEUE) {
           await enqueue(QUEUES.processRecord, { recordId: row.id }, { singletonKey: row.id });
         }
       }

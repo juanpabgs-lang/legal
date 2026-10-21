@@ -1,14 +1,15 @@
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { getConfig, resetConfig } from './config';
 import { getDb, closeDb } from './db/client';
 import { migrate } from './db/migrate';
+import { opportunities, approaches, outboxMessages, records, signals } from './db/schema';
 import { runDemoStoryline } from './modules/demo/storyline';
-import { startMockDeepSwarm } from './modules/swarm/mock-server';
+import { createFirm } from './modules/firm/service';
+import { processRecord } from './modules/pipeline/process-record';
+import { SOURCE_CATALOG } from './modules/sources/catalog';
 import { ingestSource } from './modules/sources/ingest';
 import { seedSourceCatalog } from './modules/sources/seed-catalog';
-import { SOURCE_CATALOG } from './modules/sources/catalog';
-import { opportunities, approaches, outboxMessages, records, signals } from './db/schema';
-import { createFirm } from './modules/firm/service';
+import { startMockDeepSwarm } from './modules/swarm/mock-server';
 
 const command = process.argv[2] ?? 'help';
 
@@ -57,7 +58,7 @@ async function main() {
     return;
   }
   if (command === 'live-run') {
-    resetConfig({ ...process.env, MAIL_PROVIDER: 'test' });
+    resetConfig({ ...process.env, MAIL_PROVIDER: 'test', SKIP_ENQUEUE: 'true' });
     await migrate();
     await seedSourceCatalog(getDb());
     const db = getDb();
@@ -74,17 +75,29 @@ async function main() {
         ingest.push({ source: source.id, error: err instanceof Error ? err.message : String(err) });
       }
     }
+    const pending = await db.select({ id: records.id }).from(records).limit(40);
+    let processed = 0;
+    for (const row of pending) {
+      await processRecord(db, row.id);
+      processed += 1;
+    }
     const recordCount = (await db.select().from(records)).length;
     const signalCount = (await db.select().from(signals)).length;
     const oppCount = (await db.select().from(opportunities)).length;
     const approachCount = (await db.select().from(approaches)).length;
     const sent = (await db.select().from(outboxMessages)).length;
-    const report = { ingest, recordCount, signalCount, oppCount, approachCount, outbox: sent, mailProvider: 'test' };
-    await writeFile('.live-run/report.json', JSON.stringify(report, null, 2)).catch(async () => {
-      const { mkdir } = await import('node:fs/promises');
-      await mkdir('.live-run', { recursive: true });
-      await writeFile('.live-run/report.json', JSON.stringify(report, null, 2));
-    });
+    const report = {
+      ingest,
+      processed,
+      recordCount,
+      signalCount,
+      oppCount,
+      approachCount,
+      outbox: sent,
+      mailProvider: 'test',
+    };
+    await mkdir('.live-run', { recursive: true });
+    await writeFile('.live-run/report.json', JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report, null, 2));
     return;
   }

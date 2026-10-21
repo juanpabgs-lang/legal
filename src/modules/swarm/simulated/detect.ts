@@ -127,7 +127,10 @@ function mentionByRole(mentions: Mention[], role?: string): Mention | undefined 
 
 export function detectSimulated(input: DetectInput): DetectOutput {
   const text = haystack(input);
-  const mentions = input.record.extracted.mentions;
+  const mentions =
+    input.record.extracted.mentions.length > 0
+      ? input.record.extracted.mentions
+      : mentionsFromTitle(input.record.title, input.record.market === 'GLOBAL' ? undefined : input.record.market);
   const companies = mentions.filter((m) => m.kind === 'company');
   const signals: DetectOutput['signals'] = [];
 
@@ -183,4 +186,13 @@ export function detectSimulated(input: DetectInput): DetectOutput {
   }
 
   return { version: CONTRACT_VERSION, task: 'detect', signals };
+}
+
+function mentionsFromTitle(title: string, market?: Mention['market']): Mention[] {
+  const cleaned = title
+    .replace(/\s+/g, ' ')
+    .split(/\s+[—–\-|]\s+| \(| \[/)[0]
+    ?.trim();
+  if (!cleaned || cleaned.length < 3) return [];
+  return [{ ref: 'title', kind: 'company', name: cleaned.slice(0, 180), role: 'subject', market }];
 }

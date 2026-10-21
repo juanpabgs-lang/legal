@@ -43,6 +43,10 @@ const schema = z.object({
   WORKER_CONCURRENCY: z.coerce.number().int().positive().default(4),
   INGEST_LOOKBACK_DAYS: z.coerce.number().int().positive().default(3),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
+  SKIP_ENQUEUE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type Config = z.infer<typeof schema>;
