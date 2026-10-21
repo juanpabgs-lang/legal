@@ -47,21 +47,21 @@ export async function seedDemoWorld(db: Database, clock = new Date('2026-03-01T0
   }).onConflictDoNothing();
 
   const { firm, admin } = await createFirm(db, {
-    name: 'Hale & Venner LLP',
-    slug: 'hale-venner',
+    name: 'Legara',
+    slug: 'legara',
     markets: ['UK'],
-    admin: { email: 'bd@halevenner.test', name: 'Priya Shah', password: 'hale-venner-admin' },
+    admin: { email: 'bd@legara.test', name: 'Priya Shah', password: 'legara-admin' },
   });
 
   const { partner, user: partnerUser } = await createPartner(db, {
     firmId: firm.id,
-    user: { email: 'james.ellison@halevenner.test', name: 'James Ellison', password: 'partner-pass-1' },
+    user: { email: 'james.ellison@legara.test', name: 'James Ellison', password: 'partner-pass-1' },
     practices: ['commercial', 'insolvency'],
     title: 'Partner, Commercial',
     voiceSample:
       'Helen, good to pick this up with you rather than a cold note. Worth 20 minutes this week? James Ellison',
     voiceNotes: 'Short sentences. First names. No Latin.',
-    mailboxEmail: 'james.ellison@halevenner.test',
+    mailboxEmail: 'james.ellison@legara.test',
   });
 
   const northbridge = await resolveCompany(db, {
@@ -123,7 +123,7 @@ export async function seedDemoWorld(db: Database, clock = new Date('2026-03-01T0
   ]);
 
   const interactions = Array.from({ length: 9 }, (_, i) => ({
-    partnerEmail: 'james.ellison@halevenner.test',
+    partnerEmail: 'james.ellison@legara.test',
     contactEmail: 'helen.cartwright@northbridgefoods.test',
     contactName: 'Helen Cartwright',
     companyName: 'Northbridge Foods Ltd',

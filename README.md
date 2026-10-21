@@ -17,8 +17,8 @@ npm run dev:worker   # optional background jobs
 
 Default demo login after `seed:demo`:
 
-- BD admin: `bd@halevenner.test` / `hale-venner-admin`
-- Commercial partner: `james.ellison@halevenner.test` / `partner-pass-1`
+- BD admin: `bd@legara.test` / `legara-admin`
+- Commercial partner: `james.ellison@legara.test` / `partner-pass-1`
 
 No real email is sent. Messages land in the test outbox (`GET /v1/outbox`).
 
