@@ -1,5 +1,7 @@
 # Norfront
 
+Demo Tomas can open: https://juanpabgs-lang.github.io/legal/
+
 Predictive client acquisition for law firms. The back-end reads public records, maps knock-on effects, scores who is about to need advice, routes each opportunity to the partner with the warmest tie, and drafts the approach.
 
 The Deep Swarm is the last piece. Until its API is wired in, a built-in simulated swarm does the three AI tasks (detect, predict, draft). Switching over is one mapping file and three environment variables.
